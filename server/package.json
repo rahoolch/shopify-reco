@@ -1,0 +1,17 @@
+{
+  "name": "cyntra-server",
+  "version": "0.0.2",
+  "private": true,
+  "dependencies": {
+    "axios": "^1.5.0",
+    "body-parser": "~1.14.2",
+    "connect-timeout": "^1.9.0",
+    "cors": "^2.8.5",
+    "dotenv": "^8.6.0",
+    "express": "^4.0.0",
+    "mongoose": "^8.6.0"
+  },
+  "scripts": {
+    "start": "node bin/www"
+  }
+}

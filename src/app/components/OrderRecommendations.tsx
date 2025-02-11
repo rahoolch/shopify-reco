@@ -46,30 +46,59 @@ const OrderRecommendations: React.FC = () => {
     setPhoneNumber(formatted);
   };
 
+
+
   const fetchOrders = async () => {
     setLoading(true);
     setError('');
+    
     try {
-      const response = await fetch('/api/orders', {
+      // First API call to fetch customer details
+      const response = await fetch('http://localhost:8000/api/customers', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ phoneNumber: phoneNumber.replace(/\D/g, '') }),
+        body: JSON.stringify({ phone: phoneNumber.replace(/\D/g, '') }), // Ensure correct key
       });
-
-      if (!response.ok) throw new Error('Failed to fetch orders');
-      
-      const data = await response.json();
-      setOrders(data.orders);
-      
-      generateRecommendations(data.orders);
+  
+      if (!response.ok) throw new Error('Failed to fetch customer details');
+  
+      // Extract JSON data from the first response
+      const customerData = await response.json();
+      console.log("Customer Data:", customerData);
+  
+      // Ensure we have a customer ID before making the second request
+      if (!customerData?.customers || customerData?.customers?.length === 0) {
+        throw new Error('No customer found with this phone number.');
+      }
+  
+      const customerId = customerData.customers[0].id; // Assuming we take the first customer
+  
+      // Second API call to fetch orders based on customer ID
+      const orderResponse = await fetch('http://localhost:8000/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ customerId }), // Send customer ID in the request body
+      });
+  
+      if (!orderResponse?.ok) throw new Error('Failed to fetch orders');
+  
+      const orderData = await orderResponse.json();
+      console.log("Order Data:", orderData);
+  
+      setOrders(orderData.orders);
+      generateRecommendations(orderData.orders);
     } catch (err) {
+      console.error(err);
       setError('Unable to fetch your orders. Please try again.');
     } finally {
       setLoading(false);
     }
   };
+  
 
   const generateRecommendations = (orderHistory: Order[]) => {
     const purchasedCategories = new Set<string>();
@@ -132,7 +161,7 @@ const OrderRecommendations: React.FC = () => {
             </Alert>
           )}
 
-          {orders.length > 0 && (
+          {orders?.length > 0 && (
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-semibold mb-4">Your Past Orders</h3>
